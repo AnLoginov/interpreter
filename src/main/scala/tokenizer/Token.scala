@@ -2,8 +2,7 @@ package tokenizer
 
 import tokenizer.Tokenizer.Type
 
-class Token(val expr: String, val t: Type) {
-  def out: String = s"""'Token({$expr}, {${t.getName}})'"""
+class Token(val value: String, val t: Type) {
+  def out: String = s"""'Token({$value}, {${t.getName}})'"""
+  def getType: Type = t
 }
-
-object Token {}

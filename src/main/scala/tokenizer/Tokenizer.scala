@@ -18,6 +18,7 @@ class Tokenizer(text: String) {
     if (isInteger(expr)) new Token(expr, Integer(expr.toInt))
     else expr match {
       case "+" => new Token(expr, Tokenizer.+("+"))
+      case "-" => new Token(expr, Tokenizer.-("-"))
       case ";" => new Token(expr, Tokenizer.Eof(";"))
       case _ => throw new MatchError("Unsupported case class while pattern matching.")
     }
@@ -46,7 +47,12 @@ object Tokenizer {
   abstract class Type(val name: String) {
     def getName: String = name
   }
-  case class Integer(value: Int, override val name: String = "INTEGER") extends Type(name)
-  case class +(value: String, override val name: String = "PLUS") extends Type(name)
-  case class Eof(value: String, override val name: String = "EOF") extends Type(name)
+
+  class Operation(val value: String, override val name: String) extends Type(name)
+  class Operand(val value: Int, override val name: String) extends Type(name)
+
+  case class Integer(override val value: Int, override val name: String = "INTEGER") extends Operand(value, name)
+  case class +(override val value: String, override val name: String = "PLUS") extends Operation(value, name)
+  case class -(override val value: String, override val name: String = "MINUS") extends Operation(value, name)
+  case class Eof(override val value: String, override val name: String = "EOF") extends Operation(value, name)
 }
