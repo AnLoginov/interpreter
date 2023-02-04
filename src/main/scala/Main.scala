@@ -1,3 +1,4 @@
 object Main extends App {
-  print("New project")
+  val text: String = "1 + 2; 3 + 4;"
+//  Tokenizer.init(text).tokenize().foreach(item => println(item.out))
 }
