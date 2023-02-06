@@ -44,6 +44,11 @@ object Tokenizer {
     new Tokenizer(text)
   }
 
+  def compress(t0: Token, t1: Token): Token = {
+    val compressed: String = t0.value + t1.value
+    new Token(compressed, Integer(compressed.toInt))
+  }
+
   abstract class Type(val name: String) {
     def getName: String = name
   }
