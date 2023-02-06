@@ -1,6 +1,6 @@
-package tokenizer
+package expressionbuilder
 
-import tokenizer.ExpressionBuilder.build
+import tokenizer.Token
 import tokenizer.Tokenizer.Eof
 
 import scala.annotation.tailrec
@@ -11,7 +11,7 @@ class ExpressionBuilder(tokens: List[Token]) {
   final def process(toProcess: List[Token] = tokens,
                     exprs: List[Expression] = List.empty,
                     acc: List[Token] = List.empty,
-                    func: (Token, Token, Token) => Expression = build): List[Expression] = {
+                    func: (Token, Token, Token) => Expression = ExpressionBuilder.build): List[Expression] = {
     toProcess match {
       case Nil => exprs
       case x :: xs => x.t match {

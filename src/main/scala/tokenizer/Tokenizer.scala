@@ -49,7 +49,9 @@ object Tokenizer {
   }
 
   class Operation(val value: String, override val name: String) extends Type(name)
-  class Operand(val value: Int, override val name: String) extends Type(name)
+  class Operand(val value: Int, override val name: String) extends Type(name) {
+    def getValue: Int = value
+  }
 
   case class Integer(override val value: Int, override val name: String = "INTEGER") extends Operand(value, name)
   case class +(override val value: String, override val name: String = "PLUS") extends Operation(value, name)
