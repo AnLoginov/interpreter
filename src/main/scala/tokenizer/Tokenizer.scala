@@ -10,7 +10,7 @@ class Tokenizer(text: String) {
   final def tokenize(equations: String = text, tokenized: List[Token] = List.empty): List[Token] =
     equations.splitAt(1) match {
       case ("", "") => tokenized
-      case (head, tail) if head.equals(" ") => tokenize(tail, tokenized)
+      case (head, tail) if head.isBlank => tokenize(tail, tokenized)
       case (head, tail) => tokenize(tail, tokenized :+ getToken(head))
     }
 
@@ -19,6 +19,8 @@ class Tokenizer(text: String) {
     else expr match {
       case "+" => new Token(expr, Tokenizer.+("+"))
       case "-" => new Token(expr, Tokenizer.-("-"))
+      case "*" => new Token(expr, Tokenizer.*("*"))
+      case "/" => new Token(expr, Tokenizer./("/"))
       case ";" => new Token(expr, Tokenizer.Eof(";"))
       case _ => throw new MatchError("Unsupported case class while pattern matching.")
     }
@@ -49,9 +51,13 @@ object Tokenizer {
     new Token(compressed, Integer(compressed.toInt))
   }
 
+//  def buildEmpty: Token = new Token("", Empty())
+
   abstract class Type(val name: String) {
     def getName: String = name
   }
+
+  class Empty(val value: String = "", override val name: String) extends Type(name)
 
   class Operation(val value: String, override val name: String) extends Type(name)
   class Operand(val value: Int, override val name: String) extends Type(name) {
@@ -61,5 +67,7 @@ object Tokenizer {
   case class Integer(override val value: Int, override val name: String = "INTEGER") extends Operand(value, name)
   case class +(override val value: String, override val name: String = "PLUS") extends Operation(value, name)
   case class -(override val value: String, override val name: String = "MINUS") extends Operation(value, name)
+  case class /(override val value: String, override val name: String = "DIVISION") extends Operation(value, name)
+  case class *(override val value: String, override val name: String = "MULTIPLICATION") extends Operation(value, name)
   case class Eof(override val value: String, override val name: String = "EOF") extends Operation(value, name)
 }

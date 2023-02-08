@@ -11,7 +11,7 @@ class Processor(expressions: List[Expression]) {
     exprToProcess match {
       case Nil => acc
       case x :: xs =>
-        process(xs, acc :+ (x.getValue + " = " + x.calc))
+        process(xs, acc :+ (x.getValue + " = " + x.calc()))
     }
 }
 
