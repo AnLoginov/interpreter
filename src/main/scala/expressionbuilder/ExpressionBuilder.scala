@@ -6,6 +6,9 @@ import tokenizer.Tokenizer.{Eof, compress}
 
 import scala.annotation.tailrec
 
+/**
+ * Used for creating expressions from tokens.
+ */
 class ExpressionBuilder(tokens: List[Token]) {
 
   @tailrec
@@ -24,11 +27,21 @@ class ExpressionBuilder(tokens: List[Token]) {
 }
 
 object ExpressionBuilder {
+  /**
+   * Initialises new builder.
+   */
   def init(tokens: List[Token]): ExpressionBuilder = new ExpressionBuilder(tokens)
 
+  /**
+   * Transforms a set of tokens into expression.
+   * @param acc is accumulated tokens.
+   */
   def build(acc: List[Token]): Expression =
     new Expression(acc.foldLeft("")((out, t) => out.concat(t.value)), acc)
 
+  /**
+   * Adds new token to the accumulator.
+   */
   def gainTheAccumulator(acc: List[Token], token: Token): List[Token] = {
     token.getType match {
       case _: Tokenizer.Operation => acc :+ token

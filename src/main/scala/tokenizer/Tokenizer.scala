@@ -4,6 +4,13 @@ import tokenizer.Tokenizer.Integer
 
 import scala.annotation.tailrec
 
+/**
+ * Lexical analyser (or parser). It recognises the structure of input to make sure it corresponds
+ * the specifications (grammar rules) and can be evaluated then. If the input follow the
+ * described grammar rules, it is represented as a sequence of tokens.
+ * @param text is an input (has a String type now) to analyse. Currently, tokenizer is created
+ * for the finite input only.
+ */
 class Tokenizer(text: String) {
 
   @tailrec
@@ -42,16 +49,23 @@ class Tokenizer(text: String) {
 }
 
 object Tokenizer {
+  /**
+   * Method for initialization of tokenizer.
+   * @param text is input to parse.
+   * @return
+   */
   def init(text: String): Tokenizer = {
     new Tokenizer(text)
   }
 
+  /**
+   * Used for token compression in case of multi-digit Integer value within input.
+   * @return new token.
+   */
   def compress(t0: Token, t1: Token): Token = {
     val compressed: String = t0.value + t1.value
     new Token(compressed, Integer(compressed.toInt))
   }
-
-//  def buildEmpty: Token = new Token("", Empty())
 
   abstract class Type(val name: String) {
     def getName: String = name
