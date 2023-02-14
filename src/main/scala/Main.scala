@@ -3,7 +3,7 @@ import expressionprocessor.Processor
 import tokenizer.{Token, Tokenizer}
 
 object Main extends App {
-  val text: String = "325 + 1 - 11; 12 / 8; 13 / 5; 3 * 8; 4 / 2 * 3 / 2;"
+  val text: String = "325 + 1 - 11; 12 / 8; 13 / 5; 3 * 8; 4 / 2 * 3 / 2; 2 + 3/4;"
   Tokenizer.init(text).tokenize().foreach(item => println(item.out))
 
   println()

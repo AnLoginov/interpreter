@@ -73,15 +73,20 @@ object Tokenizer {
 
   class Empty(val value: String = "", override val name: String) extends Type(name)
 
-  class Operation(val value: String, override val name: String) extends Type(name)
+  class Operation(val value: String, override val name: String, val priority: Int) extends Type(name)
   class Operand(val value: Int, override val name: String) extends Type(name) {
     def getValue: Int = value
   }
+  class Designator(val value: String, override val name: String) extends Type(name)
 
   case class Integer(override val value: Int, override val name: String = "INTEGER") extends Operand(value, name)
-  case class +(override val value: String, override val name: String = "PLUS") extends Operation(value, name)
-  case class -(override val value: String, override val name: String = "MINUS") extends Operation(value, name)
-  case class /(override val value: String, override val name: String = "DIVISION") extends Operation(value, name)
-  case class *(override val value: String, override val name: String = "MULTIPLICATION") extends Operation(value, name)
-  case class Eof(override val value: String, override val name: String = "EOF") extends Operation(value, name)
+  case class +(override val value: String, override val name: String = "PLUS", override val priority: Int = 1)
+    extends Operation(value, name, priority)
+  case class -(override val value: String, override val name: String = "MINUS", override val priority: Int = 1)
+    extends Operation(value, name, priority)
+  case class /(override val value: String, override val name: String = "DIVISION", override val priority: Int = 2)
+    extends Operation(value, name, priority)
+  case class *(override val value: String, override val name: String = "MULTIPLICATION", override val priority: Int = 2)
+    extends Operation(value, name, priority)
+  case class Eof(override val value: String, override val name: String = "EOF") extends Designator(value, name)
 }

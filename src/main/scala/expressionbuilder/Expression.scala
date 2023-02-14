@@ -1,6 +1,9 @@
 package expressionbuilder
 
+import java.util
+
 import expressionbuilder.Expression.divide
+import expressionbuilder.Positions.Position
 import tokenizer.Tokenizer.Empty
 import tokenizer.{Token, Tokenizer}
 
@@ -9,31 +12,36 @@ import scala.annotation.tailrec
 /**
  * Represents a minimum computed unit (operation and operands).
  * @param value string representation of the whole expression.
- * @param tokens is a tokenized value.
+ * @param id is an ID of the expression. IDs given by ExpressionBuilder sequentially
+ *           (the first processed token get 1, the i-th - i).
+ * @param link is an ID of related expression with operation token with lower priority:
+ *             2 * 4 + 3
  */
-class Expression(value: String, tokens: List[Token]) {
-  def getValue: String = value
-  def getOperator: String = tokens.foldLeft("")((acc, t) => acc.concat(t.value))
-  def getExpression: String = tokens.foldLeft("")((acc, t) => acc.concat(" | " + t.out + " | "))
-  def getTokens: List[Token] = tokens
+//class Expression(value: String, tokens: List[Token], id: Int, link: Int) {
+class Expression(token: Token, id: Int, link: Int, position: Position) {
+
+//  def getValue: String = value
+//  def getOperator: String = tokens.foldLeft("")((acc, t) => acc.concat(t.value))
+//  def getExpression: String = tokens.foldLeft("")((acc, t) => acc.concat(" | " + t.out + " | "))
+//  def getTokens: List[Token] = tokens
 
   /**
-   * Method for computing of expressions.
+   * Method for expressions computing.
    * @return result of computation.
    */
-  @tailrec
-  final def calc(toProcess: List[Token] = tokens, acc: String = "",
-            operation: Token = new Token("", new Empty("", "Empty"))): String =
-    toProcess match {
-      case Nil => acc
-      case x :: xs =>
-        x.getType match {
-          case _: Tokenizer.Operation => calc(xs, acc, x)
-          case _: Tokenizer.Operand =>
-            if (acc.isEmpty) calc(xs, x.value, operation)
-            else calc(xs, getResult(acc.toInt, operation, x.value.toInt), operation)
-        }
-    }
+//  @tailrec
+//  final def calc(toProcess: List[Token] = tokens, acc: String = "",
+//            operation: Token = new Token("", new Empty("", "Empty"))): String =
+//    toProcess match {
+//      case Nil => acc
+//      case x :: xs =>
+//        x.getType match {
+//          case _: Tokenizer.Operation => calc(xs, acc, x)
+//          case _: Tokenizer.Operand =>
+//            if (acc.isEmpty) calc(xs, x.value, operation)
+//            else calc(xs, getResult(acc.toInt, operation, x.value.toInt), operation)
+//        }
+//    }
 
   private[this] def getResult(acc: Int, operation: Token, right: Int): String =
     operation.getType match {
@@ -45,7 +53,6 @@ class Expression(value: String, tokens: List[Token]) {
 }
 
 object Expression {
-
   /**
    * Used to represent division operation. So, each division, if it cannot be done without reminder,
    * is represented as a rational number.
@@ -66,4 +73,10 @@ object Expression {
   private[this] def getGCD(n: Int, d: Int): Int = {
     if (d == 0) n else getGCD(d, n % d)
   }
+}
+
+object Positions extends Enumeration {
+  type Position = Value
+
+  val Left, Right, Final = Value
 }
