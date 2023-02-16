@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 
 /**
  * Represents a minimum computed unit (operation and operands).
- * @param value string representation of the whole expression.
+ * @param token string representation of the whole expression.
  * @param id is an ID of the expression. IDs given by ExpressionBuilder sequentially
  *           (the first processed token get 1, the i-th - i).
  * @param link is an ID of related expression with operation token with lower priority:
@@ -20,7 +20,8 @@ import scala.annotation.tailrec
 //class Expression(value: String, tokens: List[Token], id: Int, link: Int) {
 class Expression(token: Token, id: Int, link: Int, position: Position) {
 
-//  def getValue: String = value
+  def getValue: String = token.value
+  def getExpression: String = s"""'Expression({$id}, @{$link}, {${token.value}}, {$position}})'"""
 //  def getOperator: String = tokens.foldLeft("")((acc, t) => acc.concat(t.value))
 //  def getExpression: String = tokens.foldLeft("")((acc, t) => acc.concat(" | " + t.out + " | "))
 //  def getTokens: List[Token] = tokens
@@ -78,5 +79,5 @@ object Expression {
 object Positions extends Enumeration {
   type Position = Value
 
-  val Left, Right, Final = Value
+  val Left, Right, Resulting = Value
 }

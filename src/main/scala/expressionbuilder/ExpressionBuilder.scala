@@ -39,27 +39,88 @@ object ExpressionBuilder {
 
   /**
    * Transforms a set of tokens into expression.
-   * @param acc is accumulated tokens.
+   * @param tokens is accumulated tokens.
    */
+  def build(tokens: List[Token]) = buildTree(tokens)
+
   @tailrec
-  def buildTree(tokenAcc: List[Token], exprAcc: List[Token] = List.empty,
-            treeLevels: Map[Int, List[Expression]] = Map.empty): ExpressionTree = {
-    tokenAcc match {
-      case Nil if exprAcc.isEmpty => ExpressionTree.init(treeLevels)
-      case Nil => buildTree(Nil, Nil, ExpressionTree.addExpression(treeLevels, exprAcc.head))
+  private[this] def buildTree(tokens: List[Token],
+                prevOperations: List[(Int, Token)] = List.empty,
+                prevOperands: List[(Int, Token)] = List.empty,
+                idCounter: Int = 0,
+                treeNodes: List[Expression] = List.empty): ExpressionTree = {
+    tokens match {
+      case Nil =>
+        if (prevOperations.size == 2)
+          ExpressionTree.init(
+            treeNodes ::: buildExpr(
+              (prevOperations.head, prevOperations.last, prevOperands.head), Positions.Resulting, -1))
+        else
+          ExpressionTree.init(
+            treeNodes ::: buildExpr((prevOperations.head, prevOperands.head), Positions.Resulting, -1))
       case x :: xs =>
-        if (exprAcc.isEmpty)
-          x.getType match {
-            case _: Tokenizer.Operation => throw new MatchError("Operation is not allowed to be the first expression.")
-            case _ => buildTree(xs, List(x), treeLevels)
-          }
-        else exprAcc.head
+        x.getType match {
+          case _: Tokenizer.Operand =>
+            if (prevOperands.size < 2)
+              buildTree(xs, prevOperations, prevOperands :+ (idCounter, x), idCounter + 1, treeNodes)
+            else throw new Exception
+          case curOperation: Tokenizer.Operation =>
+            if (prevOperations.isEmpty)
+              buildTree(xs, List((idCounter, x)), prevOperands, idCounter + 1, treeNodes)
+            else {
+              if (curOperation.priority <= prevOperations.head._2.getType.asInstanceOf[Tokenizer.Operation].priority
+                && prevOperations.size == 1
+                && prevOperands.size == 2)
+                buildTree(xs, List((idCounter, x)), List.empty, idCounter + 1,
+                  treeNodes ::: buildExpr((prevOperands.head, prevOperations.head, prevOperands.last),
+                    Positions.Left, idCounter))
+              else if (curOperation.priority <= prevOperations.head._2.getType.asInstanceOf[Tokenizer.Operation].priority
+                && prevOperations.size == 1
+                && prevOperands.size == 1)
+                buildTree(xs, List((idCounter, x)), List.empty, idCounter + 1,
+                  treeNodes ::: buildExpr((prevOperations.head, prevOperands.head), Positions.Left, idCounter))
+              else if (curOperation.priority <= prevOperations.head._2.getType.asInstanceOf[Tokenizer.Operation].priority
+                && prevOperations.size == 2
+                && prevOperands.size == 2)
+                buildTree(xs, List(prevOperations.head) :+ (idCounter, x), List.empty, idCounter + 1,
+                  treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperands.last), prevOperations.last._1))
+              else if (curOperation.priority > prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
+                && prevOperations.size == 1)
+                buildTree(xs, prevOperations :+ (idCounter, x), List(prevOperands.last), idCounter + 1,
+                  treeNodes ::: buildExprFromFinals((prevOperands.head, (idCounter, x)), prevOperations.last._1))
+              else if (curOperation.priority > prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
+                && prevOperations.size == 2)
+                buildTree(xs, List(prevOperations.head), List.empty, idCounter + 1,
+                  treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperands.last), prevOperations.last._1))
+              else throw new Exception
+            }
+        }
     }
-//    new Expression(acc.foldLeft("")((out, t) => out.concat(t.value)), acc)
   }
 
-  private[this] def buildExpr(token: Token, id: Int, link: Int, position: Position): Expression = {
+  private[this] def buildExpr(tokens: ((Int, Token), (Int, Token), (Int, Token)),
+                              position: Position, link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Left),
+      new Expression(tokens._2._2, tokens._2._1, link, position),
+      new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
+  }
 
+  /**
+   * f0 - operation, f1 - operand
+   * @param tokens
+   * @param position
+   * @param link
+   * @return
+   */
+  private[this] def buildExpr(tokens: ((Int, Token), (Int, Token)),
+                              position: Position, link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, link, position),
+      new Expression(tokens._2._2, tokens._2._1, tokens._1._1, Positions.Right))
+  }
+
+  private[this] def buildExprFromFinals(tokens: ((Int, Token), (Int, Token)), link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, link, Positions.Left),
+      new Expression(tokens._2._2, tokens._2._1, link, Positions.Right))
   }
 
   /**

@@ -9,11 +9,15 @@ object Main extends App {
   println()
 
   val tokens: List[Token] = Tokenizer.init(text).tokenize()
-  val exprs = ExpressionBuilder.init(tokens).process()
-  exprs.foreach(expr => println(expr.getExpression))
+  val exprTree = ExpressionBuilder.init(tokens).process()
+  exprTree.foreach(expr => println(expr.getExpr))
 
-  println()
-
-  val result = Processor.init(exprs).process()
-  result.foreach(println(_))
+//  val tokens: List[Token] = Tokenizer.init(text).tokenize()
+//  val exprs = ExpressionBuilder.init(tokens).process()
+//  exprs.foreach(expr => println(expr.getExpression))
+//
+//  println()
+//
+//  val result = Processor.init(exprs).process()
+//  result.foreach(println(_))
 }

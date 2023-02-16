@@ -14,14 +14,14 @@ class Processor(expressions: List[Expression]) {
    * Assumes calculation for every expression.
    * @return sequence of calculations results.
    */
-  @tailrec
-  final def process(exprToProcess: List[Expression] = expressions,
-                    acc: List[String] = List.empty): List[String] =
-    exprToProcess match {
-      case Nil => acc
-      case x :: xs =>
-        process(xs, acc :+ (x.getValue + " = " + x.calc()))
-    }
+//  @tailrec
+//  final def process(exprToProcess: List[Expression] = expressions,
+//                    acc: List[String] = List.empty): List[String] =
+//    exprToProcess match {
+//      case Nil => acc
+//      case x :: xs =>
+//        process(xs, acc :+ (x.getValue + " = " + x.calc()))
+//    }
 }
 
 object Processor {
