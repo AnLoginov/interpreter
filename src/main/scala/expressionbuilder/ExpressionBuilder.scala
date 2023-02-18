@@ -1,9 +1,8 @@
 package expressionbuilder
 
-import expressionbuilder.ExpressionBuilder.gainTheAccumulator
-import expressionbuilder.Positions.Position
+import expressionbuilder.Positions._
 import tokenizer.{Token, Tokenizer}
-import tokenizer.Tokenizer.{Eof, compress}
+import tokenizer.Tokenizer.Eof
 
 import scala.annotation.tailrec
 
@@ -25,7 +24,7 @@ class ExpressionBuilder(tokens: List[Token]) {
       case Nil => exprs
       case x :: xs => x.t match {
         case _: Eof => process(xs, exprs :+ func(acc), List.empty, func)
-        case _ => process(xs, exprs, gainTheAccumulator(acc, x), func)
+        case _ => process(xs, exprs, acc :+ x, func)
       }
     }
   }
@@ -55,6 +54,10 @@ object ExpressionBuilder {
           ExpressionTree.init(
             treeNodes ::: buildExpr(
               (prevOperations.head, prevOperations.last, prevOperands.head), Positions.Resulting, -1))
+        else if (prevOperations.size == 1 && prevOperands.size == 2)
+          ExpressionTree.init(
+            treeNodes ::: buildExpr(
+              (prevOperands.head, prevOperations.head, prevOperands.last), Positions.Resulting, -1))
         else
           ExpressionTree.init(
             treeNodes ::: buildExpr((prevOperations.head, prevOperands.head), Positions.Resulting, -1))
@@ -79,7 +82,7 @@ object ExpressionBuilder {
                 && prevOperands.size == 1)
                 buildTree(xs, List((idCounter, x)), List.empty, idCounter + 1,
                   treeNodes ::: buildExpr((prevOperations.head, prevOperands.head), Positions.Left, idCounter))
-              else if (curOperation.priority <= prevOperations.head._2.getType.asInstanceOf[Tokenizer.Operation].priority
+              else if (curOperation.priority <= prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
                 && prevOperations.size == 2
                 && prevOperands.size == 2)
                 buildTree(xs, List(prevOperations.head) :+ (idCounter, x), List.empty, idCounter + 1,
@@ -92,6 +95,8 @@ object ExpressionBuilder {
                 && prevOperations.size == 2)
                 buildTree(xs, List(prevOperations.head), List.empty, idCounter + 1,
                   treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperands.last), prevOperations.last._1))
+//              else if (curOperation.priority == prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
+//                && )
               else throw new Exception
             }
         }
@@ -99,7 +104,7 @@ object ExpressionBuilder {
   }
 
   private[this] def buildExpr(tokens: ((Int, Token), (Int, Token), (Int, Token)),
-                              position: Position, link: Int): List[Expression] = {
+                              position: Position , link: Int): List[Expression] = {
     List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Left),
       new Expression(tokens._2._2, tokens._2._1, link, position),
       new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
@@ -121,20 +126,5 @@ object ExpressionBuilder {
   private[this] def buildExprFromFinals(tokens: ((Int, Token), (Int, Token)), link: Int): List[Expression] = {
     List(new Expression(tokens._1._2, tokens._1._1, link, Positions.Left),
       new Expression(tokens._2._2, tokens._2._1, link, Positions.Right))
-  }
-
-  /**
-   * Adds new token to the accumulator.
-   */
-  def gainTheAccumulator(acc: List[Token], token: Token): List[Token] = {
-    token.getType match {
-      case _: Tokenizer.Operation => acc :+ token
-      case _: Tokenizer.Operand =>
-        if (acc.isEmpty) List(token)
-        else acc.last.getType match {
-          case _: Tokenizer.Operation => acc :+ token
-          case _: Tokenizer.Operand => acc.init :+ (compress(acc.last, token))
-        }
-    }
   }
 }

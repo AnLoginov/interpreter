@@ -21,7 +21,8 @@ import scala.annotation.tailrec
 class Expression(token: Token, id: Int, link: Int, position: Position) {
 
   def getValue: String = token.value
-  def getExpression: String = s"""'Expression({$id}, @{$link}, {${token.value}}, {$position}})'"""
+  def out: String = s"""'Expression({$id}, @{$link}, {${token.value}}, {$position})'"""
+  def getId: Int = id
 //  def getOperator: String = tokens.foldLeft("")((acc, t) => acc.concat(t.value))
 //  def getExpression: String = tokens.foldLeft("")((acc, t) => acc.concat(" | " + t.out + " | "))
 //  def getTokens: List[Token] = tokens

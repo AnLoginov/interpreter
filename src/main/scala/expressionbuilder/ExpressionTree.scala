@@ -46,7 +46,9 @@ package expressionbuilder
  * 5) All the expressions stores links to expressions at its upper level.
  */
 class ExpressionTree(expr: List[Expression]) {
-  def getExpr = expr.foldLeft("")((acc, e) => acc.concat(" | " + e.getExpression + " | "))
+  def out: String = expr.foldLeft("")((acc, e) => acc.concat("| " + e.out + " |"))
+  def getExpressions: List[String] = expr.map(e => e.out)
+  def sort: ExpressionTree = ExpressionTree.init(expr.sortWith((e0, e1) => e0.getId < e1.getId))
 }
 
 object ExpressionTree {

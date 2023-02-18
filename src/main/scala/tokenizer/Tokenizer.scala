@@ -1,6 +1,6 @@
 package tokenizer
 
-import tokenizer.Tokenizer.Integer
+import tokenizer.Tokenizer._
 
 import scala.annotation.tailrec
 
@@ -14,22 +14,41 @@ import scala.annotation.tailrec
 class Tokenizer(text: String) {
 
   @tailrec
-  final def tokenize(equations: String = text, tokenized: List[Token] = List.empty): List[Token] =
+  final def tokenize(equations: String = text,
+                     acc: String = "",
+                     tokenized: List[Token] = List.empty): List[Token] =
     equations.splitAt(1) match {
-      case ("", "") => tokenized
-      case (head, tail) if head.isBlank => tokenize(tail, tokenized)
-      case (head, tail) => tokenize(tail, tokenized :+ getToken(head))
+      case (s, "") =>
+        if (isOperation(s)) tokenized ::: List(createToken(acc), createToken(s))
+        else throw new MatchError("The last token must be EOF.")
+      case (head, tail) if head.isBlank => tokenize(tail, acc, tokenized)
+      case (head, tail) =>
+        head match {
+          case s if isInteger(s) => tokenize(tail, acc + s, tokenized)
+          case s if isOperation(s) =>
+            tokenize(tail, "", tokenized ::: List(createToken(acc), createToken(s)))
+          case _ => throw new MatchError("Unsupported case class while pattern matching.")
+        }
     }
 
-  private[this] def getToken(expr: String): Token =
-    if (isInteger(expr)) new Token(expr, Integer(expr.toInt))
-    else expr match {
-      case "+" => new Token(expr, Tokenizer.+("+"))
-      case "-" => new Token(expr, Tokenizer.-("-"))
-      case "*" => new Token(expr, Tokenizer.*("*"))
-      case "/" => new Token(expr, Tokenizer./("/"))
-      case ";" => new Token(expr, Tokenizer.Eof(";"))
-      case _ => throw new MatchError("Unsupported case class while pattern matching.")
+  private[this] def createToken(s: String): Token =
+    s match {
+      case "+" => new Token(s, Tokenizer.+("+"))
+      case "-" => new Token(s, Tokenizer.-("-"))
+      case "*" => new Token(s, Tokenizer.*("*"))
+      case "/" => new Token(s, Tokenizer./("/"))
+      case ";" => new Token(s, Tokenizer.Eof(";"))
+      case _ => new Token(s, Integer(s.toInt))
+    }
+
+  private[this] def isOperation(s: String): Boolean =
+    s match {
+      case "+" => true
+      case "-" => true
+      case "/" => true
+      case "*" => true
+      case ";" => true
+      case _ => false
     }
 
   private[this] def isInteger(s: String): Boolean =
@@ -58,13 +77,8 @@ object Tokenizer {
     new Tokenizer(text)
   }
 
-  /**
-   * Used for token compression in case of multi-digit Integer value within input.
-   * @return new token.
-   */
-  def compress(t0: Token, t1: Token): Token = {
-    val compressed: String = t0.value + t1.value
-    new Token(compressed, Integer(compressed.toInt))
+  def init(text: List[String]): Tokenizer = {
+    new Tokenizer(text.foldLeft("")((acc, s) => acc + s))
   }
 
   abstract class Type(val name: String) {
