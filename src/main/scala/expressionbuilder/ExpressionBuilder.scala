@@ -50,11 +50,17 @@ object ExpressionBuilder {
                 treeNodes: List[Expression] = List.empty): ExpressionTree = {
     tokens match {
       case Nil =>
-        if (prevOperations.size == 2)
-          ExpressionTree.init(
-            treeNodes ::: buildExpr(
-              (prevOperations.head, prevOperations.last, prevOperands.head), Positions.Resulting, -1))
-        else if (prevOperations.size == 1 && prevOperands.size == 2)
+        if (prevOperations.size == 2) {
+          if (prevOperations.head._2.getType.asInstanceOf[Tokenizer.Operation].priority <=
+            prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority)
+            ExpressionTree.init(
+              treeNodes ::: buildThreeLevelsExpr(
+                (prevOperands.head, prevOperations.last, prevOperations.head), Positions.Resulting, -1))
+          else
+            ExpressionTree.init(
+              treeNodes ::: buildExpr(
+                (prevOperations.head, prevOperations.last, prevOperands.head), Positions.Resulting, -1))
+        } else if (prevOperations.size == 1 && prevOperands.size == 2)
           ExpressionTree.init(
             treeNodes ::: buildExpr(
               (prevOperands.head, prevOperations.head, prevOperands.last), Positions.Resulting, -1))
@@ -85,16 +91,22 @@ object ExpressionBuilder {
               else if (curOperation.priority <= prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
                 && prevOperations.size == 2
                 && prevOperands.size == 2)
-                buildTree(xs, List(prevOperations.head) :+ (idCounter, x), List.empty, idCounter + 1,
-                  treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperands.last), prevOperations.last._1))
+                if (curOperation.priority == prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority)
+                  buildTree(xs, List(prevOperations.head, (idCounter, x)), List.empty, idCounter + 1,
+                    treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperations.last, prevOperands.last), idCounter))
+                else
+                  buildTree(xs, List((idCounter, x)), List.empty, idCounter + 1,
+                    treeNodes ::: buildExprFromFinalsForRight((prevOperands.head, prevOperations.last, prevOperands.last), prevOperations.head._1) :::
+                    buildExprFromFinals(prevOperations.head, idCounter))
+
               else if (curOperation.priority > prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
                 && prevOperations.size == 1)
                 buildTree(xs, prevOperations :+ (idCounter, x), List(prevOperands.last), idCounter + 1,
-                  treeNodes ::: buildExprFromFinals((prevOperands.head, (idCounter, x)), prevOperations.last._1))
+                  treeNodes ::: buildExprFromFinals(prevOperands.head, prevOperations.head._1))
               else if (curOperation.priority > prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
                 && prevOperations.size == 2)
-                buildTree(xs, List(prevOperations.head), List.empty, idCounter + 1,
-                  treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperands.last), prevOperations.last._1))
+                  buildTree(xs, List(prevOperations.head, (idCounter, x)), List.empty, idCounter + 1,
+                  treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperations.last, prevOperands.last), idCounter))
 //              else if (curOperation.priority == prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
 //                && )
               else throw new Exception
@@ -110,6 +122,13 @@ object ExpressionBuilder {
       new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
   }
 
+  private[this] def buildThreeLevelsExpr(tokens: ((Int, Token), (Int, Token), (Int, Token)),
+                              position: Position , link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Right),
+      new Expression(tokens._2._2, tokens._2._1, tokens._3._1, Positions.Right),
+      new Expression(tokens._3._2, tokens._3._1, link, position))
+  }
+
   /**
    * f0 - operation, f1 - operand
    * @param tokens
@@ -123,8 +142,35 @@ object ExpressionBuilder {
       new Expression(tokens._2._2, tokens._2._1, tokens._1._1, Positions.Right))
   }
 
-  private[this] def buildExprFromFinals(tokens: ((Int, Token), (Int, Token)), link: Int): List[Expression] = {
-    List(new Expression(tokens._1._2, tokens._1._1, link, Positions.Left),
-      new Expression(tokens._2._2, tokens._2._1, link, Positions.Right))
+  private[this] def buildExprFromFinals(left: (Int, Token), right: (Int, Token),
+                                        link: Int): List[Expression] = {
+    List(new Expression(left._2, left._1, link, Positions.Left),
+      new Expression(right._2, right._1, link, Positions.Right))
+  }
+
+  private[this] def buildExprFromFinals(left: (Int, Token),
+                                        link: Int): List[Expression] = {
+    List(new Expression(left._2, left._1, link, Positions.Left))
+  }
+
+  private[this] def buildExprFromFinals(tokens: ((Int, Token), (Int, Token), (Int, Token)),
+                                        link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Left),
+      new Expression(tokens._2._2, tokens._2._1, link, Positions.Left),
+      new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
+  }
+
+  private[this] def buildExprFromFinalsForLeft(tokens: ((Int, Token), (Int, Token), (Int, Token)),
+                                        link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Left),
+      new Expression(tokens._2._2, tokens._2._1, link, Positions.Left),
+      new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
+  }
+
+  private[this] def buildExprFromFinalsForRight(tokens: ((Int, Token), (Int, Token), (Int, Token)),
+                                        link: Int): List[Expression] = {
+    List(new Expression(tokens._1._2, tokens._1._1, tokens._2._1, Positions.Left),
+      new Expression(tokens._2._2, tokens._2._1, link, Positions.Right),
+      new Expression(tokens._3._2, tokens._3._1, tokens._2._1, Positions.Right))
   }
 }

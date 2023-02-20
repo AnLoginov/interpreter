@@ -1,6 +1,5 @@
 package interpreter
 
-import expressionbuilder.ExpressionBuilder
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ExpressionBuilderTest extends TestBase {

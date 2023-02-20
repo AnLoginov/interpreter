@@ -151,7 +151,7 @@ class TestBase extends AnyFunSuite {
           "'Expression({2}, @{3}, {2}, {Left})'",
           "'Expression({3}, @{5}, {*}, {Left})'",
           "'Expression({4}, @{3}, {3}, {Right})'",
-          "'Expression({5}, @{1}, {+}, {Right})'",
+          "'Expression({5}, @{1}, {*}, {Right})'",
           "'Expression({6}, @{5}, {4}, {Right})'"))
     )
   }
