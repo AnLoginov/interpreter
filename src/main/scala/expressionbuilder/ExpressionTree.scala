@@ -47,13 +47,14 @@ package expressionbuilder
  */
 class ExpressionTree(expr: List[Expression]) {
   def out: String = expr.foldLeft("")((acc, e) => acc.concat("| " + e.out + " |"))
-  def getExpressions: List[String] = expr.map(e => e.out)
+  def getOutput: List[String] = expr.map(e => e.out)
   def sort: ExpressionTree = ExpressionTree.init(expr.sortWith((e0, e1) => e0.getId < e1.getId))
+  def getHead: Expression = expr.head
+  def getTail: List[Expression] = expr.tail
+  def getParent(id: Int): Expression = expr.find(parent => parent.getId == id).getOrElse(throw new Exception)
+  def getExpressions = expr
 }
 
 object ExpressionTree {
   def init(expr: List[Expression]): ExpressionTree = new ExpressionTree(expr)
-//  def addLevel(levels: Map[Int, List[Expression]]): Map[Int, List[Expression]] =
-//    levels + (levels.last._1 + 1 -> List())
-//  def addExpression(levels: Map[Int, List[Expression]], expr: Expression): Map[Int, List[Expression]] = ???
 }

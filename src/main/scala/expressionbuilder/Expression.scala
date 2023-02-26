@@ -1,10 +1,7 @@
 package expressionbuilder
 
-import java.util
-
 import expressionbuilder.Expression.divide
 import expressionbuilder.Positions.Position
-import tokenizer.Tokenizer.Empty
 import tokenizer.{Token, Tokenizer}
 
 import scala.annotation.tailrec
@@ -14,43 +11,58 @@ import scala.annotation.tailrec
  * @param token string representation of the whole expression.
  * @param id is an ID of the expression. IDs given by ExpressionBuilder sequentially
  *           (the first processed token get 1, the i-th - i).
- * @param link is an ID of related expression with operation token with lower priority:
- *             2 * 4 + 3
+ * @param parentID is an ID of related expression with operation token with lower priority.
+ * @param position is a position of this expression within parent expression.
+ * @param left is left operand.
+ * @param right is right operand.
  */
-//class Expression(value: String, tokens: List[Token], id: Int, link: Int) {
-class Expression(token: Token, id: Int, link: Int, position: Position) {
+class Expression(token: Token, id: Int, parentID: Int, position: Position,
+                 left: Option[Token] = Option.empty, right: Option[Token] = Option.empty) {
 
   def getValue: String = token.value
-  def out: String = s"""'Expression({$id}, @{$link}, {${token.value}}, {$position})'"""
+  def out: String = s"""'Expression({$id}, @{$parentID}, {${token.value}}, {$position})'"""
   def getId: Int = id
-//  def getOperator: String = tokens.foldLeft("")((acc, t) => acc.concat(t.value))
-//  def getExpression: String = tokens.foldLeft("")((acc, t) => acc.concat(" | " + t.out + " | "))
-//  def getTokens: List[Token] = tokens
+  def getType: Tokenizer.Type = token.getType
+  def getParentId: Int = parentID
+  def isFull: Boolean = left.nonEmpty && right.nonEmpty
+  def getToken = token
+  def getPosition = position
+  def getLeft = left
+  def getRight = right
+
+  /**
+   * Push result of current's expression calc to its parent.
+   * @param expr is a parent expression.
+   * @return new parent expression with tokens instead of empty options.
+   */
+  def push(expr: Expression): Expression = {
+    if (position == Positions.Left)
+      new Expression(expr.getToken, expr.getId, expr.getParentId, expr.getPosition, Option(token), expr.getRight)
+    else if (position == Positions.Right)
+      new Expression(expr.getToken, expr.getId, expr.getParentId, expr.getPosition, expr.getLeft, Option(token))
+    else
+      throw new Exception
+  }
 
   /**
    * Method for expressions computing.
    * @return result of computation.
    */
-//  @tailrec
-//  final def calc(toProcess: List[Token] = tokens, acc: String = "",
-//            operation: Token = new Token("", new Empty("", "Empty"))): String =
-//    toProcess match {
-//      case Nil => acc
-//      case x :: xs =>
-//        x.getType match {
-//          case _: Tokenizer.Operation => calc(xs, acc, x)
-//          case _: Tokenizer.Operand =>
-//            if (acc.isEmpty) calc(xs, x.value, operation)
-//            else calc(xs, getResult(acc.toInt, operation, x.value.toInt), operation)
-//        }
-//    }
+  def calc: Expression = {
+    token.getType match {
+      case t: Tokenizer.Operation =>
+        val result = getResult(t)
+        new Expression(new Token(result, Tokenizer.Integer(result.toInt)), id, parentID, position)
+      case _ => throw new MatchError("Match error while calc: token must have an Operation type.")
+    }
+  }
 
-  private[this] def getResult(acc: Int, operation: Token, right: Int): String =
-    operation.getType match {
-      case _: Tokenizer.+ => (acc + right).toString
-      case _: Tokenizer.- => (acc - right).toString
-      case _: Tokenizer.* => (acc * right).toString
-      case _: Tokenizer./ => divide(acc, right)
+  private[this] def getResult(operation: Tokenizer.Operation): String =
+    operation match {
+      case _: Tokenizer.+ => (left.get.value.toInt + right.get.value.toInt).toString
+      case _: Tokenizer.- => (left.get.value.toInt - right.get.value.toInt).toString
+      case _: Tokenizer.* => (left.get.value.toInt * right.get.value.toInt).toString
+      case _: Tokenizer./ => divide(left.get.value.toInt, right.get.value.toInt)
   }
 }
 
