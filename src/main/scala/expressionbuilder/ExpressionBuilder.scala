@@ -1,6 +1,7 @@
 package expressionbuilder
 
-import expressionbuilder.Positions._
+import core.Positions
+import core.Positions.Position
 import tokenizer.{Token, Tokenizer}
 import tokenizer.Tokenizer.Eof
 
@@ -60,13 +61,14 @@ object ExpressionBuilder {
             ExpressionTree.init(
               treeNodes ::: buildExpr(
                 (prevOperations.head, prevOperations.last, prevOperands.head), Positions.Resulting, -1))
-        } else if (prevOperations.size == 1 && prevOperands.size == 2)
+        } else if (prevOperations.size == 1 && prevOperands.size == 2) {
           ExpressionTree.init(
             treeNodes ::: buildExpr(
               (prevOperands.head, prevOperations.head, prevOperands.last), Positions.Resulting, -1))
-        else
+        } else {
           ExpressionTree.init(
             treeNodes ::: buildExpr((prevOperations.head, prevOperands.head), Positions.Resulting, -1))
+        }
       case x :: xs =>
         x.getType match {
           case _: Tokenizer.Operand =>
@@ -107,8 +109,6 @@ object ExpressionBuilder {
                 && prevOperations.size == 2)
                   buildTree(xs, List(prevOperations.head, (idCounter, x)), List.empty, idCounter + 1,
                   treeNodes ::: buildExprFromFinals((prevOperands.head, prevOperations.last, prevOperands.last), idCounter))
-//              else if (curOperation.priority == prevOperations.last._2.getType.asInstanceOf[Tokenizer.Operation].priority
-//                && )
               else throw new Exception
             }
         }
